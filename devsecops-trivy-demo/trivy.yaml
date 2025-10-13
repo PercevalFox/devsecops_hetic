@@ -4,6 +4,6 @@ ignore-unfixed: true
 severity: CRITICAL,HIGH
 scanners:
   - vuln
-  - secret
   - misconfig
+  - secret
 list-all-pkgs: true
