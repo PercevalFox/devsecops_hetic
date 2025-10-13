@@ -16,13 +16,14 @@ RUN curl -fsSL https://github.com/coreruleset/coreruleset/archive/refs/tags/${CR
   cp /opt/coreruleset-*/crs-setup.conf.example /etc/nginx/modsec/crs-setup.conf && \
   cp -r /opt/coreruleset-*/rules /etc/nginx/modsec/
 
-RUN /bin/sh -c 'cat > /etc/nginx/modsec/modsecurity.conf << "EOF"\n\
-SecRuleEngine On\n\
-Include /etc/nginx/modsec/crs-setup.conf\n\
-Include /etc/nginx/modsec/rules/*.conf\n\
-EOF'
+RUN printf '%s\n' \
+  'SecRuleEngine On' \
+  'Include /etc/nginx/modsec/crs-setup.conf' \
+  'Include /etc/nginx/modsec/rules/*.conf' \
+  > /etc/nginx/modsec/modsecurity.conf
 
 COPY nginx.conf /etc/nginx/nginx.conf
+
 RUN openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
     -keyout /etc/nginx/certs/self.key \
     -out /etc/nginx/certs/self.crt \
