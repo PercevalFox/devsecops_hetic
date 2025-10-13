@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.get("/view")
 def view():
-    # Vulné ici =D 
+    # Vulné ici =D
     path = request.args.get("path", "README.md")
     try:
         with open(path, "rb") as f:
