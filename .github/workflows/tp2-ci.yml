@@ -1,0 +1,57 @@
+name: tp2-ci
+
+on:
+  push:
+    paths:
+      - "TP2/**"
+      - ".github/workflows/tp2-ci.yml"
+  pull_request:
+    paths:
+      - "TP2/**"
+      - ".github/workflows/tp2-ci.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: TP2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start stack
+        run: docker compose up -d --build
+
+      - name: Wait
+        run: |
+          for i in {1..40}; do
+            if curl -sk https://localhost >/dev/null; then exit 0; fi
+            sleep 3
+          done
+          exit 1
+
+      - name: Headers report
+        run: scripts/report_headers.sh
+
+      - name: WAF test
+        run: scripts/test_waf.sh
+
+      - name: Collect logs
+        run: |
+          mkdir -p reports/logs
+          docker compose exec -T reverse-proxy sh -c 'cat /var/log/nginx/access.log' > reports/logs/access.log || true
+          docker compose exec -T reverse-proxy sh -c 'cat /var/log/nginx/error.log' > reports/logs/error.log || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tp2-reports
+          path: TP2/reports/**
+
+      - name: Stop
+        if: always()
+        run: docker compose down -v
