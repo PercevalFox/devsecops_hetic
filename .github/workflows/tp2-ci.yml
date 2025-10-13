@@ -23,10 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure scripts are executable
+        run: chmod +x scripts/*.sh || true
+
       - name: Start stack
         run: docker compose up -d --build
 
-      - name: Wait
+      - name: Wait for HTTPS
         run: |
           for i in {1..40}; do
             if curl -sk https://localhost >/dev/null; then exit 0; fi
@@ -35,10 +38,10 @@ jobs:
           exit 1
 
       - name: Headers report
-        run: scripts/report_headers.sh
+        run: bash scripts/report_headers.sh
 
       - name: WAF test
-        run: scripts/test_waf.sh
+        run: bash scripts/test_waf.sh
 
       - name: Collect logs
         run: |
