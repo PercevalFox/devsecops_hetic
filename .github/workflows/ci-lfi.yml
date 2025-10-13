@@ -34,3 +34,13 @@ jobs:
 
       - name: Pytest – prouve la LFI
         run: pytest -q
+        
+      - name: Smoke DAST (curl localhost)
+        run: |
+          python app.py & 
+          PID=$!
+          sleep 2
+          # tente l'exploit
+          curl -s "http://127.0.0.1:8000/view?path=../../etc/hosts" | tee out.txt
+          kill $PID || true
+          grep -i "localhost" out.txt
