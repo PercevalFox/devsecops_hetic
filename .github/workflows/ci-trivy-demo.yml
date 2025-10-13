@@ -1,14 +1,14 @@
-name: ci-devsecops-trivy-demo
+name: ci-trivy-demo
 
 on:
   push:
     paths:
       - "devsecops-trivy-demo/**"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/ci-trivy-demo.yml"
   pull_request:
     paths:
       - "devsecops-trivy-demo/**"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/ci-trivy-demo.yml"
   workflow_dispatch: {}
 
 permissions:
@@ -18,13 +18,11 @@ concurrency:
   group: ci-${{ github.ref }}-trivy-demo
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: devsecops-trivy-demo
-
 jobs:
   build-test-scan:
     runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}/devsecops-trivy-demo  # <- pour que 'app' soit importable
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +33,12 @@ jobs:
           python-version: '3.12'
 
       - name: Install deps
+        working-directory: devsecops-trivy-demo
         run: pip install -r requirements.txt
 
       - name: Tests
-        run: pytest -q
+        working-directory: devsecops-trivy-demo
+        run: python -m pytest -q        # <- python -m pytest + PYTHONPATH règle le import 'app'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -46,7 +46,7 @@ jobs:
       - name: Build image (local)
         uses: docker/build-push-action@v6
         with:
-          context: .                     
+          context: devsecops-trivy-demo  # <- sous-dossier
           push: false
           load: true
           tags: devsecops-demo:${{ github.sha }}
@@ -55,8 +55,8 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
-          scan-ref: .                    
-          trivy-config: trivy.yaml
+          scan-ref: devsecops-trivy-demo
+          trivy-config: devsecops-trivy-demo/trivy.yaml
           format: table
           exit-code: '0'
 
@@ -65,7 +65,7 @@ jobs:
         with:
           scan-type: image
           image-ref: devsecops-demo:${{ github.sha }}
-          trivy-config: trivy.yaml
+          trivy-config: devsecops-trivy-demo/trivy.yaml
           format: table
           exit-code: '1'
           vuln-type: 'os,library'
