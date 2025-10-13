@@ -1,0 +1,36 @@
+name: ci-lfi-lab
+
+on:
+  push:
+    paths:
+      - "lfi-lab/**"
+      - ".github/workflows/ci-lfi.yml"
+  pull_request:
+    paths:
+      - "lfi-lab/**"
+      - ".github/workflows/ci-lfi.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  lfi-test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: lfi-lab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Pytest – prouve la LFI
+        run: pytest -q
