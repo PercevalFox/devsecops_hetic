@@ -1,0 +1,19 @@
+services:
+  reverse-proxy:
+    build: ./reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SERVER_NAME=localhost
+    volumes:
+      - reverse_logs:/var/log/nginx
+    depends_on:
+      - app
+  app:
+    build: ./webapp-php
+    volumes:
+      - app_data:/var/www/html
+volumes:
+  reverse_logs:
+  app_data:
