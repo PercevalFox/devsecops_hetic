@@ -31,8 +31,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Fix workspace permissions for ZAP
-        run: sudo chown -R 1000:1000 "$GITHUB_WORKSPACE"
+      - name: Prepare ZAP work dir
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/zap"
+          sudo chown -R 1000:1000 "$GITHUB_WORKSPACE/zap"
 
       - name: Wait for DVWA (host port)
         run: |
@@ -47,6 +49,7 @@ jobs:
 
       - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
+        working-directory: ./zap
         with:
           target: "http://127.0.0.1:8080"
           cmd_options: "-r zap_report.html -w zap_report.md -J zap_report.json"
@@ -56,6 +59,6 @@ jobs:
         with:
           name: zap_report
           path: |
-            zap_report.html
-            zap_report.md
-            zap_report.json
+            zap/zap_report.html
+            zap/zap_report.md
+            zap/zap_report.json
