@@ -1,17 +1,26 @@
-name: ci
+name: ci-devsecops-trivy-demo
+
 on:
   push:
-    branches: [ "main" ]
+    paths:
+      - "devsecops-trivy-demo/**"
+      - ".github/workflows/ci.yml"
   pull_request:
-    branches: [ "main" ]
+    paths:
+      - "devsecops-trivy-demo/**"
+      - ".github/workflows/ci.yml"
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-trivy-demo
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: devsecops-trivy-demo
 
 jobs:
   build-test-scan:
@@ -37,21 +46,21 @@ jobs:
       - name: Build image (local)
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: .                     
           push: false
           load: true
           tags: devsecops-demo:${{ github.sha }}
 
-      - name: Trivy FS scan
+      - name: Trivy FS scan (info)
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
-          scan-ref: .
+          scan-ref: .                    
           trivy-config: trivy.yaml
           format: table
           exit-code: '0'
 
-      - name: Trivy Image scan
+      - name: Trivy Image scan (bloquant)
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: image
