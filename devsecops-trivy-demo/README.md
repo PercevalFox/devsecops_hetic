@@ -19,3 +19,5 @@ bash scripts/scan_local.sh
 # ou sans installer Trivy
 bash scripts/scan_local_dockerized.sh
 ```
+
+![ci](https://github.com/PercevalFox/devsecops_hetic/actions/workflows/ci.yml/badge.svg)
