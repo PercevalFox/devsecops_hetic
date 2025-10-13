@@ -1,4 +1,5 @@
 name: zap-baseline-dvwa
+
 on:
   workflow_dispatch: {}
   push:
@@ -8,26 +9,45 @@ on:
     paths:
       - ".github/workflows/zap-dvwa.yml"
 
+permissions:
+  contents: read
+
 jobs:
   zap:
     runs-on: ubuntu-latest
+
     services:
       dvwa:
         image: vulnerables/web-dvwa
         ports:
           - 8080:80
+        options: >-
+          --health-cmd="curl -sS http://127.0.0.1/ | head -n1 || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Wait for DVWA
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for DVWA (host port)
         run: |
           for i in {1..30}; do
             if curl -sSf http://localhost:8080 >/dev/null; then
-              echo "DVWA is up"; break; fi; sleep 2; done
-      - name: ZAP Baseline
+              echo "DVWA is up"; exit 0
+            fi
+            sleep 2
+          done
+          echo "DVWA not reachable on host port" >&2
+          exit 1
+
+      - name: ZAP Baseline Scan (target service name)
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: "http://localhost:8080"
+          target: "http://dvwa"
           cmd_options: "-r zap_report.html"
+
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4
         with:
