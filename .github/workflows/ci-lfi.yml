@@ -41,6 +41,6 @@ jobs:
           PID=$!
           sleep 2
           # tente l'exploit
-          curl -s "http://127.0.0.1:8000/view?path=../../etc/hosts" | tee out.txt
+          curl -s "http://127.0.0.1:8000/view?path=/etc/hosts" | tee out.txt
           kill $PID || true
           grep -i "localhost" out.txt
