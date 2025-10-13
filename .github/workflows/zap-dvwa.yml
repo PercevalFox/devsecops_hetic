@@ -31,10 +31,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Fix workspace permissions for ZAP
+        run: sudo chown -R 1000:1000 "$GITHUB_WORKSPACE"
+
       - name: Wait for DVWA (host port)
         run: |
-          for i in {1..30}; do
-            if curl -sSf http://localhost:8080 >/dev/null; then
+          for i in {1..40}; do
+            if curl -sSf http://127.0.0.1:8080 >/dev/null; then
               echo "DVWA is up"; exit 0
             fi
             sleep 2
@@ -42,14 +45,17 @@ jobs:
           echo "DVWA not reachable on host port" >&2
           exit 1
 
-      - name: ZAP Baseline Scan (target service name)
+      - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: "http://dvwa"
-          cmd_options: "-r zap_report.html"
+          target: "http://127.0.0.1:8080"
+          cmd_options: "-r zap_report.html -w zap_report.md -J zap_report.json"
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4
         with:
           name: zap_report
-          path: zap_report.html
+          path: |
+            zap_report.html
+            zap_report.md
+            zap_report.json
